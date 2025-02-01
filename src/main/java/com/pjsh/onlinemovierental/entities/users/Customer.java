@@ -10,8 +10,8 @@ public class Customer extends AbstractUser {
         super();
     }
 
-    public Customer(Long id, String name, String email, String password, String membershipType) {
-        super(id, name, email, password);
+    public Customer(String username, String email, String password, String membershipType) {
+        super(username, email, password);
         this.membershipType = membershipType;
     }
 

@@ -11,7 +11,7 @@ public class Admin extends AbstractUser{
     }
 
     public Admin(Long id, String name, String email, String password, String role) {
-        super(id, name, email, password);
+        super(name, email, password);
         this.role = role;
     }
 

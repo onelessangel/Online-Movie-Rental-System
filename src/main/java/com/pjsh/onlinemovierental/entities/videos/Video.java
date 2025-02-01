@@ -1,13 +1,12 @@
 package com.pjsh.onlinemovierental.entities.videos;
 
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.MappedSuperclass;
+import jakarta.persistence.*;
 
 import java.time.LocalDate;
 
-@MappedSuperclass
+@Entity
+@Inheritance(strategy = InheritanceType.JOINED)
+// TODO: nu am fol MappedSuperclass pentru ca in Rental exista o referinta la Video si nu se poate face o mapare ManyToOne catre o clasa MappedSuperclass
 public class Video {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -15,7 +14,6 @@ public class Video {
     private String title;
     private String genre;
     private LocalDate releaseDate;
-    private double rating;
     private boolean isAvailable;
     private int copies;
 
@@ -34,10 +32,6 @@ public class Video {
 
     public Long getId() {
         return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
     }
 
     public String getTitle() {
