@@ -1,10 +1,10 @@
 package com.pjsh.onlinemovierental.entities.videos;
 
+import jakarta.persistence.DiscriminatorValue;
 import jakarta.persistence.Entity;
 
-import java.time.LocalDate;
-
 @Entity
+@DiscriminatorValue("Movie")
 public class Movie extends Video{
     private int duration;
 
@@ -12,8 +12,8 @@ public class Movie extends Video{
         super();
     }
 
-    public Movie(Long id, String title, String genre, LocalDate releaseDate, double rating, boolean isAvailable, int copies, int duration) {
-        super(id, title, genre, releaseDate, rating, isAvailable, copies);
+    public Movie(String title, String genre, String releaseYear, boolean isAvailable, int copies, int duration) {
+        super(title, genre, releaseYear, isAvailable, copies);
         this.duration = duration;
     }
 

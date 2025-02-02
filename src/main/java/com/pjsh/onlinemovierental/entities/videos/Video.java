@@ -2,10 +2,8 @@ package com.pjsh.onlinemovierental.entities.videos;
 
 import jakarta.persistence.*;
 
-import java.time.LocalDate;
-
 @Entity
-@Inheritance(strategy = InheritanceType.JOINED)
+@Inheritance(strategy = InheritanceType.SINGLE_TABLE)
 // TODO: nu am fol MappedSuperclass pentru ca in Rental exista o referinta la Video si nu se poate face o mapare ManyToOne catre o clasa MappedSuperclass
 public class Video {
     @Id
@@ -13,19 +11,17 @@ public class Video {
     private Long id;
     private String title;
     private String genre;
-    private LocalDate releaseDate;
+    private String releaseYear;
     private boolean isAvailable;
     private int copies;
 
     public Video() {
     }
 
-    public Video(Long id, String title, String genre, LocalDate releaseDate, double rating, boolean isAvailable, int copies) {
-        this.id = id;
+    public Video(String title, String genre, String releaseYear, boolean isAvailable, int copies) {
         this.title = title;
         this.genre = genre;
-        this.releaseDate = releaseDate;
-        this.rating = rating;
+        this.releaseYear = releaseYear;
         this.isAvailable = isAvailable;
         this.copies = copies;
     }
@@ -50,20 +46,12 @@ public class Video {
         this.genre = genre;
     }
 
-    public LocalDate getReleaseDate() {
-        return releaseDate;
+    public String getReleaseYear() {
+        return releaseYear;
     }
 
-    public void setReleaseDate(LocalDate releaseDate) {
-        this.releaseDate = releaseDate;
-    }
-
-    public double getRating() {
-        return rating;
-    }
-
-    public void setRating(double rating) {
-        this.rating = rating;
+    public void setReleaseYear(String releaseYear) {
+        this.releaseYear = releaseYear;
     }
 
     public boolean isAvailable() {

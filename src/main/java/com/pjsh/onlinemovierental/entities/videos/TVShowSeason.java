@@ -1,10 +1,10 @@
 package com.pjsh.onlinemovierental.entities.videos;
 
+import jakarta.persistence.DiscriminatorValue;
 import jakarta.persistence.Entity;
 
-import java.time.LocalDate;
-
 @Entity
+@DiscriminatorValue("TVShowSeason")
 public class TVShowSeason extends Video {
     private int seasonNumber;
     private int episodeCount;
@@ -14,9 +14,9 @@ public class TVShowSeason extends Video {
         super();
     }
 
-    public TVShowSeason(Long id, String title, String genre, LocalDate releaseDate, double rating, boolean isAvailable,
+    public TVShowSeason(String title, String genre, String releaseYear, boolean isAvailable,
                         int copies, int seasonNumber, int episodeCount, int episodeDuration) {
-        super(id, title, genre, releaseDate, rating, isAvailable, copies);
+        super(title, genre, releaseYear, isAvailable, copies);
         this.seasonNumber = seasonNumber;
         this.episodeCount = episodeCount;
         this.episodeDuration = episodeDuration;
