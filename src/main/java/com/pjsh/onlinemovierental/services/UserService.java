@@ -8,6 +8,9 @@ import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.Comparator;
+import java.util.List;
+
 @Service
 public class UserService {
     @Autowired
@@ -26,5 +29,9 @@ public class UserService {
         Customer customer = new Customer(username, email, password, MembershipType.BASIC.toString());
         userRepository.save(customer);
         return "Created new customer";
+    }
+
+    public List<Customer> viewAllCustomers() {
+        return userRepository.findAllCustomers().stream().sorted(Comparator.comparing(AbstractUser::getUsername)).toList();
     }
 }

@@ -3,14 +3,17 @@ package com.pjsh.onlinemovierental;
 import com.pjsh.onlinemovierental.entities.users.AbstractUser;
 import com.pjsh.onlinemovierental.entities.users.Admin;
 import com.pjsh.onlinemovierental.entities.users.Customer;
+import com.pjsh.onlinemovierental.entities.videos.TVShowSeason;
+import com.pjsh.onlinemovierental.entities.videos.Video;
 import com.pjsh.onlinemovierental.repositories.UserRepository;
-import com.pjsh.onlinemovierental.services.UserService;
 import com.pjsh.onlinemovierental.services.RentalService;
+import com.pjsh.onlinemovierental.services.UserService;
 import com.pjsh.onlinemovierental.services.VideoService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 
+import java.util.List;
 import java.util.Scanner;
 
 @Component
@@ -70,9 +73,9 @@ public class MovieRentalSystem implements CommandLineRunner {
 
                     switch (command) {
                         case "1" -> addVideo();
-//                        case "2" -> rentalService.removeMovie();
-//                        case "3" -> rentalService.viewAllMovies();
-//                        case "4" -> userService.viewAllCustomers();
+                        case "2" -> removeVideo();
+                        case "3" -> viewAllVideos();
+                        case "4" -> viewAllCustomers();
 //                        case "5" -> rentalService.viewAllRentals();
                         case "6" -> handleExit();
                         default -> System.out.println("Invalid command! Please try again.");
@@ -80,6 +83,52 @@ public class MovieRentalSystem implements CommandLineRunner {
                 }
             }
         }
+    }
+
+    private void viewAllCustomers() {
+        List<Customer> customers = userService.viewAllCustomers();
+        customers.forEach(customer ->
+                System.out.println(customer.getUsername() + " - " + customer.getEmail() + " - " + customer.getMembershipType()));
+    }
+
+    private void viewAllVideos() {
+        List<Video> videos = videoService.viewAllMovies();
+        StringBuilder sb = new StringBuilder();
+
+        for (Video video : videos) {
+            sb.append(video.getTitle());
+
+            if (video instanceof TVShowSeason) {
+                sb.append(" Season ").append(((TVShowSeason) video).getSeasonNumber());
+            }
+
+            sb.append("\n");
+        }
+
+        sb.deleteCharAt(sb.length() - 1);
+        System.out.println(sb);
+    }
+
+    private void removeVideo() {
+        System.out.println("Enter video title: ");
+        String title = scanner.nextLine().trim();
+
+        System.out.println("Is this a TV show? (yes/no): ");
+        String isTVShow = scanner.nextLine().trim();
+
+        Integer seasonNumber = null;
+        if (isTVShow.equalsIgnoreCase("yes")) {
+            System.out.println("Do you want to delete a specific season? (season number/all): ");
+            String seasonNumberString = scanner.nextLine().trim();
+            if (!seasonNumberString.equalsIgnoreCase("all")) {
+                seasonNumber = Integer.parseInt(seasonNumberString);
+            } else {
+                seasonNumber = -1;
+            }
+        }
+
+        videoService.removeVideo(title, seasonNumber);
+        System.out.println("Video removed successfully!");
     }
 
     private void addVideo() {
@@ -93,35 +142,32 @@ public class MovieRentalSystem implements CommandLineRunner {
         String title = scanner.nextLine().trim();
         System.out.println("Enter genre: ");
         String genre = scanner.nextLine().trim();
-        System.out.println("Enter release date: ");
-        String releaseDate = scanner.nextLine().trim();
+        System.out.println("Enter release year: ");
+        String releaseYear = scanner.nextLine().trim();
+        int duration = -1, season = -1, episodes = -1, episodeDuration = -1;
 
         if (videoType.equals("1")) {
             System.out.println("Enter movie duration: ");
-            String duration = scanner.nextLine().trim();
+            duration = Integer.parseInt(scanner.nextLine().trim());
         } else {
-            System.out.println("Enter number of seasons: ");
-            String seasons = scanner.nextLine().trim();
+            System.out.println("Enter season number: ");
+            season = Integer.parseInt(scanner.nextLine().trim());
             System.out.println("Enter number of episodes per season: ");
-            String episodes = scanner.nextLine().trim();
+            episodes = Integer.parseInt(scanner.nextLine().trim());
             System.out.println("Enter episode duration: ");
-            String episodeDuration = scanner.nextLine().trim();
+            episodeDuration = Integer.parseInt(scanner.nextLine().trim());
         }
+
         System.out.println("Enter number of available copies: ");
-        String copies = scanner.nextLine().trim();
+        int copies = Integer.parseInt(scanner.nextLine().trim());
 
         switch (videoType) {
-            case "1":
-                System.out.println("Enter movie duration: ");
-                String copies = scanner.nextLine().trim();
-
-                videoService.addMovie();
-                break;
-            case "2" -> videoService.addTVShow();
+            case "1" -> videoService.addMovie(title, genre, releaseYear, duration, copies);
+            case "2" -> videoService.addTVShow(title, genre, releaseYear, season, episodes, episodeDuration, copies);
             default -> System.out.println("Invalid video type! Please try again.");
         }
-        rentalService.addMovie();
-        System.out.println("Movie added successfully!");
+
+        System.out.println("Video added successfully!");
     }
 
     private void handleExit() {
@@ -147,22 +193,23 @@ public class MovieRentalSystem implements CommandLineRunner {
     }
 
     private void handleLogin() {
-        System.out.println("Enter username: ");
-        String username = scanner.nextLine().trim();
-        System.out.println("Enter password: ");
-        String password = scanner.nextLine().trim();
+//        System.out.println("Enter username: ");
+//        String username = scanner.nextLine().trim();
+//        System.out.println("Enter password: ");
+//        String password = scanner.nextLine().trim();
 
-        AbstractUser user = userService.getUser(username);
-        if (user != null && user.getPassword().equals(password)) {
+//        AbstractUser user = userService.getUser(username);
+        AbstractUser user = userService.getUser("teo");
+//        if (user != null && user.getPassword().equals(password)) {
             userIsLoggedIn = true;
-            if (username.equals("admin")) {
-                loggedInAdmin = (Admin) user;
-            } else {
+//            if (username.equals("admin")) {
+//                loggedInAdmin = (Admin) user;
+//            } else {
                 loggedInCustomer = (Customer) user;
-            }
-            System.out.println("Successfully logged in!");
-        } else {
-            System.out.println("Invalid username or password! Please try again.");
-        }
+//            }
+//            System.out.println("Successfully logged in!");
+//        } else {
+//            System.out.println("Invalid username or password! Please try again.");
+//        }
     }
 }
