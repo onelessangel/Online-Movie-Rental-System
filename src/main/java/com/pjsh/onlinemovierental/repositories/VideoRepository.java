@@ -11,4 +11,5 @@ public interface VideoRepository extends JpaRepository<Video, Long> {
     ArrayList<Video> findByTitle(String title);
     ArrayList<Video> findVideosByGenre(String genre);
     ArrayList<Video> findVideosByTitleContaining(String title);
+    ArrayList<Video> findVideosByReleaseYear(String releaseYear);
 }

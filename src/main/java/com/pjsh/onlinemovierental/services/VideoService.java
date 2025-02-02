@@ -52,4 +52,19 @@ public class VideoService {
     public List<Video> viewAllMovies() {
         return videoRepository.findAll().stream().sorted(Comparator.comparing(Video::getTitle)).toList();
     }
+
+    public List<Video> findVideoByTitle(String title) {
+        return videoRepository.findVideosByTitleContaining(title)
+                .stream().sorted(Comparator.comparing(Video::getTitle)).toList();
+    }
+
+    public List<Video> findVideoByGenre(String genre) {
+        return videoRepository.findVideosByGenre(genre)
+                .stream().sorted(Comparator.comparing(Video::getTitle)).toList();
+    }
+
+    public List<Video> findVideoByReleaseYear(String releaseYear) {
+        return videoRepository.findVideosByReleaseYear(releaseYear)
+                .stream().sorted(Comparator.comparing(Video::getTitle)).toList();
+    }
 }

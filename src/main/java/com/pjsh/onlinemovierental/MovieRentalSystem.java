@@ -5,7 +5,6 @@ import com.pjsh.onlinemovierental.entities.users.Admin;
 import com.pjsh.onlinemovierental.entities.users.Customer;
 import com.pjsh.onlinemovierental.entities.videos.TVShowSeason;
 import com.pjsh.onlinemovierental.entities.videos.Video;
-import com.pjsh.onlinemovierental.repositories.UserRepository;
 import com.pjsh.onlinemovierental.services.RentalService;
 import com.pjsh.onlinemovierental.services.UserService;
 import com.pjsh.onlinemovierental.services.VideoService;
@@ -19,27 +18,21 @@ import java.util.Scanner;
 @Component
 public class MovieRentalSystem implements CommandLineRunner {
     @Autowired
-    private UserRepository userRepository;
+    private UserService userService;
+
+    @Autowired
+    private VideoService videoService;
 
     @Autowired
     private RentalService rentalService;
-
-    @Autowired
-    private UserService userService;
 
     private Admin loggedInAdmin = null;
     private Customer loggedInCustomer = null;
     private boolean userIsLoggedIn = false;
     private final Scanner scanner = new Scanner(System.in);
-    @Autowired
-    private VideoService videoService;
-
-    private enum Command {
-        LOGIN, REGISTER, EXIT,
-    }
 
     @Override
-    public void run(String... args) throws Exception {
+    public void run(String... args) {
         System.out.println("Welcome to the Online Movie Rental System!");
 
         while (true) {
@@ -80,20 +73,82 @@ public class MovieRentalSystem implements CommandLineRunner {
                         case "6" -> handleExit();
                         default -> System.out.println("Invalid command! Please try again.");
                     }
+                } else if (loggedInCustomer != null) {
+                    System.out.println("""
+                            Available commands:
+                                1. View all videos
+                                2. Find video by title
+                                3. Find video by genre
+                                4. Find video by release year
+                                5. Rent a video
+                                6. Return a video
+                                7. View all rentals
+                                8. View account info
+                                9. Exit
+                            Enter command:""");
+                    String command = scanner.nextLine().trim();
+
+                    switch (command) {
+                        case "1" -> viewAllVideos();
+                        case "2" -> findVideosByTitle();
+                        case "3" -> findVideoByGenre();
+                        case "4" -> findVideoByReleaseYear();
+//                        case "5" -> rentVideo();
+//                        case "6" -> returnVideo();
+//                        case "7" -> viewAllRentals();rentalService.viewAllRentals();
+                        case "8" -> viewAccountInfo();
+                        case "9" -> handleExit();
+                        default -> System.out.println("Invalid command! Please try again.");
+                    }
                 }
             }
         }
     }
 
+    private void viewAccountInfo() {
+        System.out.println("Username: " + loggedInCustomer.getUsername());
+        System.out.println("Email: " + loggedInCustomer.getEmail());
+        System.out.println("Membership type: " + loggedInCustomer.getMembershipType());
+    }
+
+    private void findVideoByReleaseYear() {
+        System.out.println("Enter release year: ");
+        String releaseYear = scanner.nextLine().trim();
+        List<Video> videos = videoService.findVideoByReleaseYear(releaseYear);
+        System.out.println();
+        videos.forEach(video -> System.out.println(video.getTitle()));
+        System.out.println();
+    }
+
+    private void findVideoByGenre() {
+        System.out.println("Enter genre: ");
+        String genre = scanner.nextLine().trim();
+        List<Video> videos = videoService.findVideoByGenre(genre);
+        System.out.println();
+        videos.forEach(video -> System.out.println(video.getTitle()));
+        System.out.println();
+    }1
+
+    private void findVideosByTitle() {
+        System.out.println("Enter title: ");
+        String title = scanner.nextLine().trim();
+        List<Video> videos = videoService.findVideoByTitle(title);
+        System.out.println();
+        videos.forEach(video -> System.out.println(video.getTitle()));
+        System.out.println();
+    }
+
     private void viewAllCustomers() {
         List<Customer> customers = userService.viewAllCustomers();
+        System.out.println();
         customers.forEach(customer ->
                 System.out.println(customer.getUsername() + " - " + customer.getEmail() + " - " + customer.getMembershipType()));
+        System.out.println();
     }
 
     private void viewAllVideos() {
         List<Video> videos = videoService.viewAllMovies();
-        StringBuilder sb = new StringBuilder();
+        StringBuilder sb = new StringBuilder("\n");
 
         for (Video video : videos) {
             sb.append(video.getTitle());
@@ -105,7 +160,6 @@ public class MovieRentalSystem implements CommandLineRunner {
             sb.append("\n");
         }
 
-        sb.deleteCharAt(sb.length() - 1);
         System.out.println(sb);
     }
 
@@ -128,7 +182,7 @@ public class MovieRentalSystem implements CommandLineRunner {
         }
 
         videoService.removeVideo(title, seasonNumber);
-        System.out.println("Video removed successfully!");
+        System.out.println("\nVideo removed successfully!\n");
     }
 
     private void addVideo() {
@@ -167,7 +221,7 @@ public class MovieRentalSystem implements CommandLineRunner {
             default -> System.out.println("Invalid video type! Please try again.");
         }
 
-        System.out.println("Video added successfully!");
+        System.out.println("\nVideo added successfully!\n");
     }
 
     private void handleExit() {
@@ -189,7 +243,7 @@ public class MovieRentalSystem implements CommandLineRunner {
         String password = scanner.nextLine().trim();
 
         userService.createCustomer(username, email, password);
-        System.out.println("Successfully registered!");
+        System.out.println("\nSuccessfully registered!\n");
     }
 
     private void handleLogin() {
@@ -201,11 +255,11 @@ public class MovieRentalSystem implements CommandLineRunner {
 //        AbstractUser user = userService.getUser(username);
         AbstractUser user = userService.getUser("teo");
 //        if (user != null && user.getPassword().equals(password)) {
-            userIsLoggedIn = true;
+        userIsLoggedIn = true;
 //            if (username.equals("admin")) {
 //                loggedInAdmin = (Admin) user;
 //            } else {
-                loggedInCustomer = (Customer) user;
+        loggedInCustomer = (Customer) user;
 //            }
 //            System.out.println("Successfully logged in!");
 //        } else {
