@@ -51,7 +51,7 @@ public class MovieRentalSystem implements CommandLineRunner {
                     case "1" -> handleLogin();
                     case "2" -> handleRegister();
                     case "3" -> handleExit();
-                    default -> System.out.println("Invalid command! Please try again.");
+                    default -> System.out.println("\nInvalid command! Please try again.\n");
                 }
             } else {
                 if (loggedInAdmin != null) {
@@ -59,10 +59,12 @@ public class MovieRentalSystem implements CommandLineRunner {
                             Available commands:
                                 1. Add video
                                 2. Remove video
-                                3. View all videos
-                                4. View all customers
-                                5. View all rentals
-                                6. Exit
+                                3. All videos
+                                4. All customers
+                                5. All active rentals
+                                6. Customer active rentals
+                                7. Customer history
+                                8. Exit
                             Enter command:""");
                     String command = scanner.nextLine().trim();
 
@@ -71,22 +73,24 @@ public class MovieRentalSystem implements CommandLineRunner {
                         case "2" -> removeVideo();
                         case "3" -> viewAllVideos();
                         case "4" -> viewAllCustomers();
-//                        case "5" -> rentalService.viewAllRentals();
-                        case "6" -> handleExit();
-                        default -> System.out.println("Invalid command! Please try again.");
+                        case "5" -> viewAllActiveRentals();
+                        case "6" -> viewCustomerActiveRentals();
+                        case "7" -> viewCustomerRentingHistory();
+                        case "8" -> handleExit();
+                        default -> System.out.println("\nInvalid command! Please try again.\n");
                     }
                 } else if (loggedInCustomer != null) {
                     System.out.println("""
                             Available commands:
                                 1. View all videos
-                                2. Find video by title
-                                3. Find video by genre
-                                4. Find video by release year
+                                2. Search video by title
+                                3. Search video by genre
+                                4. Search video by release year
                                 5. Rent a video
                                 6. Return a video
-                                7. View active rentals
-                                8. View full renting history
-                                9. View account info
+                                7. Active rentals
+                                8. Full renting history
+                                9. Account info
                                 10. Exit
                             Enter command:""");
                     String command = scanner.nextLine().trim();
@@ -98,23 +102,65 @@ public class MovieRentalSystem implements CommandLineRunner {
                         case "4" -> findVideoByReleaseYear();
                         case "5" -> rentVideo();
                         case "6" -> returnVideo();
-                        case "7" -> viewActiveRentals();
-                        case "8" -> viewFullRentingHistory();
+                        case "7" -> viewActiveRentals(loggedInCustomer);
+                        case "8" -> viewFullRentingHistory(loggedInCustomer);
                         case "9" -> viewAccountInfo();
                         case "10" -> handleExit();
-                        default -> System.out.println("Invalid command! Please try again.");
+                        default -> System.out.println("\nInvalid command! Please try again.\n");
                     }
                 }
             }
         }
     }
 
-    private void viewFullRentingHistory() {
-        List<Rental> rentals = rentalService.getRentals(loggedInCustomer)
-                .stream().sorted((r1, r2) -> r2.getRentalDate().compareTo(r1.getRentalDate())).toList();
-        System.out.println("\nFull renting history:");
+    private void viewCustomerRentingHistory() {
+        System.out.println("Enter customer username: ");
+        String username = scanner.nextLine().trim();
+        AbstractUser customer = userService.getUser(username);
+
+        if (customer == null) {
+            System.out.println("\nNo customer found with the username " + username + "\n");
+            return;
+        }
+
+        viewFullRentingHistory((Customer) customer);
+    }
+
+    private void viewCustomerActiveRentals() {
+        System.out.println("Enter customer username: ");
+        String username = scanner.nextLine().trim();
+        AbstractUser customer = userService.getUser(username);
+
+        if (customer == null) {
+            System.out.println("\nNo customer found with the username " + username + "\n");
+            return;
+        }
+
+        List<Rental> rentals = rentalService.getActiveRentals((Customer) customer);
+        System.out.println("\nActive rentals for " + username + ":");
+        rentals.forEach(rental ->
+                printRentalInfo(rental, " - Rented: " + rental.getRentalDate() + " - Due date: " + rental.getReturnDate()));
+    }
+
+    private static void printRentalInfo(Rental rental, String additionalInfo) {
+        Video video = rental.getVideo();
+
+        if (video instanceof TVShowSeason) {
+            System.out.print(video.getTitle() + " Season " + ((TVShowSeason) video).getSeasonNumber());
+        } else {
+            System.out.print(video.getTitle());
+        }
+
+        System.out.println(additionalInfo);
+    }
+
+    private void viewAllActiveRentals() {
+        List<Rental> rentals = rentalService.getAllActiveRentals();
+        System.out.println("\nAll active rentals:");
+
         rentals.forEach(rental -> {
             Video video = rental.getVideo();
+            String customerUsername = rental.getCustomer().getUsername();
 
             if (video instanceof TVShowSeason) {
                 System.out.print(video.getTitle() + " Season " + ((TVShowSeason) video).getSeasonNumber());
@@ -122,25 +168,26 @@ public class MovieRentalSystem implements CommandLineRunner {
                 System.out.print(video.getTitle());
             }
 
-            System.out.println(" - Rented: " + rental.getRentalDate() + " - Status: " + rental.getStatus());
+            System.out.println(" - Rented by: " + customerUsername + " - Rented: " + rental.getRentalDate());
         });
+
         System.out.println();
     }
 
-    private void viewActiveRentals() {
-        List<Rental> rentals = rentalService.getActiveRentals(loggedInCustomer);
+    private void viewFullRentingHistory(Customer customer) {
+        List<Rental> rentals = rentalService.getRentals(customer)
+                .stream().sorted((r1, r2) -> r2.getRentalDate().compareTo(r1.getRentalDate())).toList();
+        System.out.println("\nFull renting history:");
+        rentals.forEach(rental ->
+                printRentalInfo(rental, " - Rented: " + rental.getRentalDate() + " - Status: " + rental.getStatus()));
+        System.out.println();
+    }
+
+    private void viewActiveRentals(Customer customer) {
+        List<Rental> rentals = rentalService.getActiveRentals(customer);
         System.out.println("\nActive rentals:");
-        rentals.forEach(rental -> {
-            Video video = rental.getVideo();
-
-            if (video instanceof TVShowSeason) {
-                System.out.print(video.getTitle() + " Season " + ((TVShowSeason) video).getSeasonNumber());
-            } else {
-                System.out.print(video.getTitle());
-            }
-
-            System.out.println(" - Rented: " + rental.getRentalDate() + " - Due date: " + rental.getReturnDate());
-        });
+        rentals.forEach(rental ->
+                printRentalInfo(rental, " - Rented: " + rental.getRentalDate() + " - Due date: " + rental.getReturnDate()));
         System.out.println();
     }
 
@@ -362,13 +409,13 @@ public class MovieRentalSystem implements CommandLineRunner {
 //        String password = scanner.nextLine().trim();
 
 //        AbstractUser user = userService.getUser(username);
-        AbstractUser user = userService.getUser("teo");
+        AbstractUser user = userService.getUser("admin");
 //        if (user != null && user.getPassword().equals(password)) {
         userIsLoggedIn = true;
 //            if (username.equals("admin")) {
-//                loggedInAdmin = (Admin) user;
+        loggedInAdmin = (Admin) user;
 //            } else {
-        loggedInCustomer = (Customer) user;
+//        loggedInCustomer = (Customer) user;
 //            }
 //            System.out.println("Successfully logged in!");
 //        } else {

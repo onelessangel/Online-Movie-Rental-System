@@ -22,4 +22,5 @@ public interface RentalRepository extends JpaRepository<Rental, Long> {
     List<Rental> findTvShowSeasonRentalByCustomerAndTitle(Customer customer, String title, int seasonNumber);
 
     List<Rental> findRentalsByCustomer(Customer customer);
+    List<Rental> findRentalsByStatus(String string);
 }

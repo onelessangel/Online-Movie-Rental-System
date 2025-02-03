@@ -83,6 +83,10 @@ public class RentalService {
         return rentalRepository.findRentalsByCustomer(customer);
     }
 
+    public List<Rental> getAllActiveRentals() {
+        return rentalRepository.findRentalsByStatus(RentalStatus.ACTIVE.toString());
+    }
+
     public List<Rental> getActiveRentals(Customer customer) {
         return getRentals(customer).stream()
                 .filter(rental -> rental.getStatus().equals(RentalStatus.ACTIVE.toString())).toList();
