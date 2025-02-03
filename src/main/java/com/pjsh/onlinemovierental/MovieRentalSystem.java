@@ -11,6 +11,7 @@ import com.pjsh.onlinemovierental.services.RentalService;
 import com.pjsh.onlinemovierental.services.UserService;
 import com.pjsh.onlinemovierental.services.VideoService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 
@@ -27,6 +28,9 @@ public class MovieRentalSystem implements CommandLineRunner {
 
     @Autowired
     private RentalService rentalService;
+
+    @Value("${default_user}")
+    private String defaultUser;
 
     private Admin loggedInAdmin = null;
     private Customer loggedInCustomer = null;
@@ -403,23 +407,39 @@ public class MovieRentalSystem implements CommandLineRunner {
     }
 
     private void handleLogin() {
-//        System.out.println("Enter username: ");
-//        String username = scanner.nextLine().trim();
-//        System.out.println("Enter password: ");
-//        String password = scanner.nextLine().trim();
+        switch (defaultUser) {
+            case "admin":
+                AbstractUser adminUser = userService.getUser("admin");
+                userIsLoggedIn = true;
+                loggedInAdmin = (Admin) adminUser;
+                return;
 
-//        AbstractUser user = userService.getUser(username);
-        AbstractUser user = userService.getUser("admin");
-//        if (user != null && user.getPassword().equals(password)) {
-        userIsLoggedIn = true;
-//            if (username.equals("admin")) {
-        loggedInAdmin = (Admin) user;
-//            } else {
-//        loggedInCustomer = (Customer) user;
-//            }
-//            System.out.println("Successfully logged in!");
-//        } else {
-//            System.out.println("Invalid username or password! Please try again.");
-//        }
+            case "customer":
+                AbstractUser customerUser = userService.getUser("teo");
+                userIsLoggedIn = true;
+                loggedInCustomer = (Customer) customerUser;
+                return;
+
+            default:
+                break;
+        }
+
+        System.out.println("Enter username: ");
+        String username = scanner.nextLine().trim();
+        System.out.println("Enter password: ");
+        String password = scanner.nextLine().trim();
+
+        AbstractUser user = userService.getUser(username);
+        if (user != null && user.getPassword().equals(password)) {
+            userIsLoggedIn = true;
+            if (username.equals("admin")) {
+                loggedInAdmin = (Admin) user;
+            } else {
+                loggedInCustomer = (Customer) user;
+            }
+            System.out.println("Successfully logged in!");
+        } else {
+            System.out.println("Invalid username or password! Please try again.");
+        }
     }
 }
