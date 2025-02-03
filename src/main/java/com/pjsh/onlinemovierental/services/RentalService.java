@@ -5,11 +5,10 @@ import com.pjsh.onlinemovierental.entities.users.Customer;
 import com.pjsh.onlinemovierental.entities.videos.TVShowSeason;
 import com.pjsh.onlinemovierental.entities.videos.Video;
 import com.pjsh.onlinemovierental.enums.RentalStatus;
-import com.pjsh.onlinemovierental.enums.SearchOption;
 import com.pjsh.onlinemovierental.repositories.RentalRepository;
 import com.pjsh.onlinemovierental.repositories.VideoRepository;
 import jakarta.transaction.Transactional;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -17,40 +16,15 @@ import java.util.List;
 
 @Service
 public class RentalService {
-    @Autowired
-    private RentalRepository rentalRepository;
+    private final RentalRepository rentalRepository;
+    private final VideoRepository videoRepository;
 
-    @Autowired
-    private VideoRepository videoRepository;
+    @Value("${default_return_days}")
+    private long defaultReturnDays;
 
     public RentalService(RentalRepository rentalRepository, VideoRepository videoRepository) {
         this.rentalRepository = rentalRepository;
         this.videoRepository = videoRepository;
-    }
-
-    public String searchVideo(SearchOption choice, String videoTitle, String genre, Double rating) {
-//        ArrayList<Video> videos;
-//
-//        switch (choice) {
-//            case TITLE:
-//                videos = videoRepository.findByTitle(videoTitle);
-//                break;
-//            case GENRE:
-//                videos = videoRepository.findVideosByGenre(genre);
-//                break;
-//            case PARTIAL_TITLE:
-//                videos = videoRepository.findVideosByTitleContaining(videoTitle);
-//                break;
-//            case RATING:
-//                videos = videoRepository.findVideosByRating(rating);
-//                break;
-//            default:
-//                videos = new ArrayList<>();
-//                break;
-//        }
-//
-//        return videos;
-        return "Searched for video!";
     }
 
     @Transactional
@@ -72,7 +46,7 @@ public class RentalService {
 
         Rental rental = new Rental(customer, video);
         rental.setRentalDate(LocalDate.now());
-        rental.setReturnDate(LocalDate.now().plusDays(7));
+        rental.setReturnDate(LocalDate.now().plusDays(defaultReturnDays));
         rental.setStatus(RentalStatus.ACTIVE.toString());
 
         rentalRepository.save(rental);

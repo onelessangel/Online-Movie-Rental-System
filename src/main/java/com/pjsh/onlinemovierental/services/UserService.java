@@ -5,7 +5,6 @@ import com.pjsh.onlinemovierental.entities.users.Customer;
 import com.pjsh.onlinemovierental.enums.MembershipType;
 import com.pjsh.onlinemovierental.repositories.UserRepository;
 import jakarta.transaction.Transactional;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.Comparator;
@@ -13,8 +12,7 @@ import java.util.List;
 
 @Service
 public class UserService {
-    @Autowired
-    private UserRepository userRepository;
+    private final UserRepository userRepository;
 
     public UserService(UserRepository userRepository) {
         this.userRepository = userRepository;

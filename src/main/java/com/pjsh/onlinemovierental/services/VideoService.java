@@ -5,7 +5,6 @@ import com.pjsh.onlinemovierental.entities.videos.TVShowSeason;
 import com.pjsh.onlinemovierental.entities.videos.Video;
 import com.pjsh.onlinemovierental.repositories.VideoRepository;
 import jakarta.transaction.Transactional;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.Comparator;
@@ -13,8 +12,7 @@ import java.util.List;
 
 @Service
 public class VideoService {
-    @Autowired
-    private VideoRepository videoRepository;
+    private final VideoRepository videoRepository;
 
     public VideoService(VideoRepository videoRepository) {
         this.videoRepository = videoRepository;
