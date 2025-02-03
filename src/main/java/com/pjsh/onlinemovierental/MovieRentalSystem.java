@@ -1,10 +1,12 @@
 package com.pjsh.onlinemovierental;
 
+import com.pjsh.onlinemovierental.entities.actions.Rental;
 import com.pjsh.onlinemovierental.entities.users.AbstractUser;
 import com.pjsh.onlinemovierental.entities.users.Admin;
 import com.pjsh.onlinemovierental.entities.users.Customer;
 import com.pjsh.onlinemovierental.entities.videos.TVShowSeason;
 import com.pjsh.onlinemovierental.entities.videos.Video;
+import com.pjsh.onlinemovierental.enums.MembershipType;
 import com.pjsh.onlinemovierental.services.RentalService;
 import com.pjsh.onlinemovierental.services.UserService;
 import com.pjsh.onlinemovierental.services.VideoService;
@@ -82,9 +84,10 @@ public class MovieRentalSystem implements CommandLineRunner {
                                 4. Find video by release year
                                 5. Rent a video
                                 6. Return a video
-                                7. View all rentals
-                                8. View account info
-                                9. Exit
+                                7. View active rentals
+                                8. View full renting history
+                                9. View account info
+                                10. Exit
                             Enter command:""");
                     String command = scanner.nextLine().trim();
 
@@ -93,11 +96,12 @@ public class MovieRentalSystem implements CommandLineRunner {
                         case "2" -> findVideosByTitle();
                         case "3" -> findVideoByGenre();
                         case "4" -> findVideoByReleaseYear();
-//                        case "5" -> rentVideo();
-//                        case "6" -> returnVideo();
-//                        case "7" -> viewAllRentals();rentalService.viewAllRentals();
-                        case "8" -> viewAccountInfo();
-                        case "9" -> handleExit();
+                        case "5" -> rentVideo();
+                        case "6" -> returnVideo();
+                        case "7" -> viewActiveRentals();
+                        case "8" -> viewFullRentingHistory();
+                        case "9" -> viewAccountInfo();
+                        case "10" -> handleExit();
                         default -> System.out.println("Invalid command! Please try again.");
                     }
                 }
@@ -105,10 +109,115 @@ public class MovieRentalSystem implements CommandLineRunner {
         }
     }
 
+    private void viewFullRentingHistory() {
+        List<Rental> rentals = rentalService.getRentals(loggedInCustomer)
+                .stream().sorted((r1, r2) -> r2.getRentalDate().compareTo(r1.getRentalDate())).toList();
+        System.out.println("\nFull renting history:");
+        rentals.forEach(rental -> {
+            Video video = rental.getVideo();
+
+            if (video instanceof TVShowSeason) {
+                System.out.print(video.getTitle() + " Season " + ((TVShowSeason) video).getSeasonNumber());
+            } else {
+                System.out.print(video.getTitle());
+            }
+
+            System.out.println(" - Rented: " + rental.getRentalDate() + " - Status: " + rental.getStatus());
+        });
+        System.out.println();
+    }
+
+    private void viewActiveRentals() {
+        List<Rental> rentals = rentalService.getActiveRentals(loggedInCustomer);
+        System.out.println("\nActive rentals:");
+        rentals.forEach(rental -> {
+            Video video = rental.getVideo();
+
+            if (video instanceof TVShowSeason) {
+                System.out.print(video.getTitle() + " Season " + ((TVShowSeason) video).getSeasonNumber());
+            } else {
+                System.out.print(video.getTitle());
+            }
+
+            System.out.println(" - Rented: " + rental.getRentalDate() + " - Due date: " + rental.getReturnDate());
+        });
+        System.out.println();
+    }
+
+    private void returnVideo() {
+        System.out.println("Enter video title: ");
+        String title = scanner.nextLine().trim();
+
+        System.out.println("Is this a TV show? (yes/no): ");
+        String isTVShow = scanner.nextLine().trim();
+
+        Integer seasonNumber = null;
+        if (isTVShow.equalsIgnoreCase("yes")) {
+            System.out.println("Enter season number: ");
+            seasonNumber = Integer.parseInt(scanner.nextLine().trim());
+        }
+
+        boolean isRented = rentalService.checkRental(loggedInCustomer, title, seasonNumber);
+
+        if (!isRented) {
+            System.out.println("\nYou have not rented this video! Please try another title.\n");
+            return;
+        }
+
+        boolean isSuccessful = rentalService.returnVideo(loggedInCustomer, title, seasonNumber);
+
+        if (!isSuccessful) {
+            System.out.println("\nNo videos found with the title " + title + "\n");
+            return;
+        }
+
+        System.out.println("\nVideo returned successfully!\n");
+    }
+
+    private void rentVideo() {
+        // check if the user rented to the limit of their subscription plan
+        if (rentalService.getActiveRentalsCount(loggedInCustomer) >=
+                MembershipType.valueOf(loggedInCustomer.getMembershipType()).getMaxRentals()) {
+            System.out.println(
+                    "\nYou have reached the limit of your subscription plan. Please return a video to rent another one.\n");
+            return;
+        }
+
+        System.out.println("Enter video title: ");
+        String title = scanner.nextLine().trim();
+
+        System.out.println("Is this a TV show? (yes/no): ");
+        String isTVShow = scanner.nextLine().trim();
+
+        Integer seasonNumber = null;
+        if (isTVShow.equalsIgnoreCase("yes")) {
+            System.out.println("Enter season number: ");
+            seasonNumber = Integer.parseInt(scanner.nextLine().trim());
+        }
+
+        boolean isAlreadyRented = rentalService.checkRental(loggedInCustomer, title, seasonNumber);
+
+        if (!isAlreadyRented) {
+            System.out.println("\nYou have already rented this video! Please try another title from our collection.\n");
+            return;
+        }
+
+        boolean isSuccessful = rentalService.rentVideo(loggedInCustomer, title, seasonNumber);
+
+        if (!isSuccessful) {
+            System.out.println("\nNo videos found with the title " + title + "\n");
+            return;
+        }
+
+        System.out.println("\nVideo rented successfully!\n");
+    }
+
     private void viewAccountInfo() {
+        System.out.println();
         System.out.println("Username: " + loggedInCustomer.getUsername());
         System.out.println("Email: " + loggedInCustomer.getEmail());
         System.out.println("Membership type: " + loggedInCustomer.getMembershipType());
+        System.out.println();
     }
 
     private void findVideoByReleaseYear() {
@@ -127,7 +236,7 @@ public class MovieRentalSystem implements CommandLineRunner {
         System.out.println();
         videos.forEach(video -> System.out.println(video.getTitle()));
         System.out.println();
-    }1
+    }
 
     private void findVideosByTitle() {
         System.out.println("Enter title: ");
