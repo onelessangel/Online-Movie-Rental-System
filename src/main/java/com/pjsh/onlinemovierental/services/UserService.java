@@ -29,7 +29,7 @@ public class UserService {
         return "Created new customer";
     }
 
-    public List<Customer> viewAllCustomers() {
+    public List<Customer> getAllCustomers() {
         return userRepository.findAllCustomers().stream().sorted(Comparator.comparing(AbstractUser::getUsername)).toList();
     }
 }

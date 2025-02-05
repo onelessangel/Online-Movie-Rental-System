@@ -7,6 +7,7 @@ import com.pjsh.onlinemovierental.entities.users.Customer;
 import com.pjsh.onlinemovierental.entities.videos.TVShowSeason;
 import com.pjsh.onlinemovierental.entities.videos.Video;
 import com.pjsh.onlinemovierental.enums.MembershipType;
+import com.pjsh.onlinemovierental.services.NotificationService;
 import com.pjsh.onlinemovierental.services.RentalService;
 import com.pjsh.onlinemovierental.services.UserService;
 import com.pjsh.onlinemovierental.services.VideoService;
@@ -29,7 +30,10 @@ public class MovieRentalSystem implements CommandLineRunner {
     @Autowired
     private RentalService rentalService;
 
-    @Value("${default_user}")
+    @Autowired
+    private NotificationService notificationService;
+
+    @Value("${default_user: ''}")
     private String defaultUser;
 
     private Admin loggedInAdmin = null;
@@ -62,25 +66,24 @@ public class MovieRentalSystem implements CommandLineRunner {
                     System.out.println("""
                             Available commands:
                                 1. Add video
-                                2. Remove video
-                                3. All videos
-                                4. All customers
-                                5. All active rentals
-                                6. Customer active rentals
-                                7. Customer history
-                                8. Exit
+                                2. All videos
+                                3. All customers
+                                4. All active rentals
+                                5. Customer active rentals
+                                6. Customer history
+                                7. Exit
                             Enter command:""");
                     String command = scanner.nextLine().trim();
 
                     switch (command) {
                         case "1" -> addVideo();
-                        case "2" -> removeVideo();
-                        case "3" -> viewAllVideos();
-                        case "4" -> viewAllCustomers();
-                        case "5" -> viewAllActiveRentals();
-                        case "6" -> viewCustomerActiveRentals();
-                        case "7" -> viewCustomerRentingHistory();
-                        case "8" -> handleExit();
+//                        case "2" -> removeVideo();
+                        case "2" -> viewAllVideos();
+                        case "3" -> viewAllCustomers();
+                        case "4" -> viewAllActiveRentals();
+                        case "5" -> viewCustomerActiveRentals();
+                        case "6" -> viewCustomerRentingHistory();
+                        case "7" -> handleExit();
                         default -> System.out.println("\nInvalid command! Please try again.\n");
                     }
                 } else if (loggedInCustomer != null) {
@@ -142,8 +145,13 @@ public class MovieRentalSystem implements CommandLineRunner {
 
         List<Rental> rentals = rentalService.getActiveRentals((Customer) customer);
         System.out.println("\nActive rentals for " + username + ":");
-        rentals.forEach(rental ->
-                printRentalInfo(rental, " - Rented: " + rental.getRentalDate() + " - Due date: " + rental.getReturnDate()));
+        if (rentals.isEmpty()) {
+            System.out.println("No active rentals found!");
+        } else {
+            rentals.forEach(rental ->
+                    printRentalInfo(rental, " - Rented: " + rental.getRentalDate() + " - Due date: " + rental.getReturnDate()));
+        }
+        System.out.println();
     }
 
     private static void printRentalInfo(Rental rental, String additionalInfo) {
@@ -180,7 +188,13 @@ public class MovieRentalSystem implements CommandLineRunner {
 
     private void viewFullRentingHistory(Customer customer) {
         List<Rental> rentals = rentalService.getRentals(customer)
-                .stream().sorted((r1, r2) -> r2.getRentalDate().compareTo(r1.getRentalDate())).toList();
+                .stream().sorted((r1, r2) -> {
+                    int dateComparison = r2.getRentalDate().compareTo(r1.getRentalDate());
+                    if (dateComparison != 0) {
+                        return dateComparison;
+                    }
+                    return r1.getVideo().getTitle().compareTo(r2.getVideo().getTitle());
+                }).toList();
         System.out.println("\nFull renting history:");
         rentals.forEach(rental ->
                 printRentalInfo(rental, " - Rented: " + rental.getRentalDate() + " - Status: " + rental.getStatus()));
@@ -190,8 +204,12 @@ public class MovieRentalSystem implements CommandLineRunner {
     private void viewActiveRentals(Customer customer) {
         List<Rental> rentals = rentalService.getActiveRentals(customer);
         System.out.println("\nActive rentals:");
-        rentals.forEach(rental ->
-                printRentalInfo(rental, " - Rented: " + rental.getRentalDate() + " - Due date: " + rental.getReturnDate()));
+        if (rentals.isEmpty()) {
+            System.out.println("No active rentals found!");
+        } else {
+            rentals.forEach(rental ->
+                    printRentalInfo(rental, " - Rented: " + rental.getRentalDate() + " - Due date: " + rental.getReturnDate()));
+        }
         System.out.println();
     }
 
@@ -248,7 +266,7 @@ public class MovieRentalSystem implements CommandLineRunner {
 
         boolean isAlreadyRented = rentalService.checkRental(loggedInCustomer, title, seasonNumber);
 
-        if (!isAlreadyRented) {
+        if (isAlreadyRented) {
             System.out.println("\nYou have already rented this video! Please try another title from our collection.\n");
             return;
         }
@@ -299,7 +317,7 @@ public class MovieRentalSystem implements CommandLineRunner {
     }
 
     private void viewAllCustomers() {
-        List<Customer> customers = userService.viewAllCustomers();
+        List<Customer> customers = userService.getAllCustomers();
         System.out.println();
         customers.forEach(customer ->
                 System.out.println(customer.getUsername() + " - " + customer.getEmail() + " - " + customer.getMembershipType()));
@@ -381,6 +399,12 @@ public class MovieRentalSystem implements CommandLineRunner {
             default -> System.out.println("Invalid video type! Please try again.");
         }
 
+        List<Customer> customers = userService.getAllCustomers();
+
+        for (Customer customer : customers) {
+            notificationService.sendNotification("New video added - NOTIFIED CUSTOMER: " + customer.getUsername());
+        }
+
         System.out.println("\nVideo added successfully!\n");
     }
 
@@ -437,9 +461,9 @@ public class MovieRentalSystem implements CommandLineRunner {
             } else {
                 loggedInCustomer = (Customer) user;
             }
-            System.out.println("Successfully logged in!");
+            System.out.println("\nSuccessfully logged in!\n");
         } else {
-            System.out.println("Invalid username or password! Please try again.");
+            System.out.println("\nInvalid username or password! Please try again.\n");
         }
     }
 }

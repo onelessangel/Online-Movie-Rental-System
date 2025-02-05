@@ -3,9 +3,11 @@ package com.pjsh.onlinemovierental.repositories;
 import com.pjsh.onlinemovierental.entities.actions.Rental;
 import com.pjsh.onlinemovierental.entities.users.Customer;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @Repository
@@ -23,4 +25,9 @@ public interface RentalRepository extends JpaRepository<Rental, Long> {
 
     List<Rental> findRentalsByCustomer(Customer customer);
     List<Rental> findRentalsByStatus(String string);
+
+    @Modifying
+    @Query("UPDATE Rental r SET r.returnDate = :returnDate, r.status = :status WHERE r.id = :rentalId")
+    void updateRental(Long rentalId, LocalDate returnDate, String status);
+
 }

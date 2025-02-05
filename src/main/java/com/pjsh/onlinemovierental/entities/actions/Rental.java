@@ -30,6 +30,16 @@ public class Rental {
         this.video = vIdeo;
     }
 
+    public Rental(Customer testCustomer, Video testMovie, String active) {
+        this.customer = testCustomer;
+        this.video = testMovie;
+        this.status = active;
+    }
+
+    public Long getId() {
+        return id;
+    }
+
     public Customer getCustomer() {
         return customer;
     }

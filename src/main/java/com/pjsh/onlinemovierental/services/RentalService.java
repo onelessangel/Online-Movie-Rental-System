@@ -7,6 +7,7 @@ import com.pjsh.onlinemovierental.entities.videos.Video;
 import com.pjsh.onlinemovierental.enums.RentalStatus;
 import com.pjsh.onlinemovierental.repositories.RentalRepository;
 import com.pjsh.onlinemovierental.repositories.VideoRepository;
+import jakarta.persistence.EntityManager;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -18,13 +19,15 @@ import java.util.List;
 public class RentalService {
     private final RentalRepository rentalRepository;
     private final VideoRepository videoRepository;
+    private final EntityManager entityManager;
 
     @Value("${default_return_days}")
     private long defaultReturnDays;
 
-    public RentalService(RentalRepository rentalRepository, VideoRepository videoRepository) {
+    public RentalService(RentalRepository rentalRepository, VideoRepository videoRepository, EntityManager entityManager) {
         this.rentalRepository = rentalRepository;
         this.videoRepository = videoRepository;
+        this.entityManager = entityManager;
     }
 
     @Transactional
@@ -71,13 +74,18 @@ public class RentalService {
     }
 
     public boolean checkRental(Customer customer, String title, Integer seasonNumber) {
+        List<Rental> rentals;
+
         if (seasonNumber != null && seasonNumber != -1) {
-            return !rentalRepository.findTvShowSeasonRentalByCustomerAndTitle(customer, title, seasonNumber).isEmpty();
+            rentals = rentalRepository.findTvShowSeasonRentalByCustomerAndTitle(customer, title, seasonNumber);
         }
 
-        return !rentalRepository.findRentalsByCustomerAndTitle(customer, title).isEmpty();
+        rentals = rentalRepository.findRentalsByCustomerAndTitle(customer, title);
+
+        return !rentals.stream().filter(r -> r.getStatus().equals(RentalStatus.ACTIVE.toString())).toList().isEmpty();
     }
 
+    @Transactional
     public boolean returnVideo(Customer customer, String title, Integer seasonNumber) {
         List<Rental> rentals;
 
@@ -91,7 +99,12 @@ public class RentalService {
             return false;
         }
 
-        Rental rental = rentals.getFirst();
+        Rental rental = rentals.stream().filter(r -> r.getStatus().equals(RentalStatus.ACTIVE.toString())).findFirst().orElse(null);
+
+        if (rental == null) {
+            return false;
+        }
+
         rental.setReturnDate(LocalDate.now());
         rental.setStatus(RentalStatus.RETURNED.toString());
 
