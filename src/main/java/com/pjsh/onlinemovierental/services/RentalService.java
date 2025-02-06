@@ -7,7 +7,6 @@ import com.pjsh.onlinemovierental.entities.videos.Video;
 import com.pjsh.onlinemovierental.enums.RentalStatus;
 import com.pjsh.onlinemovierental.repositories.RentalRepository;
 import com.pjsh.onlinemovierental.repositories.VideoRepository;
-import jakarta.persistence.EntityManager;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -19,15 +18,13 @@ import java.util.List;
 public class RentalService {
     private final RentalRepository rentalRepository;
     private final VideoRepository videoRepository;
-    private final EntityManager entityManager;
 
     @Value("${default_return_days}")
     private long defaultReturnDays;
 
-    public RentalService(RentalRepository rentalRepository, VideoRepository videoRepository, EntityManager entityManager) {
+    public RentalService(RentalRepository rentalRepository, VideoRepository videoRepository) {
         this.rentalRepository = rentalRepository;
         this.videoRepository = videoRepository;
-        this.entityManager = entityManager;
     }
 
     @Transactional

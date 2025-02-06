@@ -6,7 +6,6 @@ import com.pjsh.onlinemovierental.repositories.VideoRepository;
 import com.pjsh.onlinemovierental.services.RentalService;
 import com.pjsh.onlinemovierental.services.UserService;
 import com.pjsh.onlinemovierental.services.VideoService;
-import jakarta.persistence.EntityManager;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.scheduling.annotation.EnableAsync;
@@ -25,8 +24,7 @@ public class AppConfig {
     }
 
     @Bean
-    public RentalService rentalService(RentalRepository rentalRepository, VideoRepository videoRepository,
-                                       EntityManager entityManager) {
-        return new RentalService(rentalRepository, videoRepository, entityManager);
+    public RentalService rentalService(RentalRepository rentalRepository, VideoRepository videoRepository) {
+        return new RentalService(rentalRepository, videoRepository);
     }
 }
