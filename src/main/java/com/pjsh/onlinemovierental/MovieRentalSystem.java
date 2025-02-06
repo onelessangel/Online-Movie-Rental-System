@@ -66,24 +66,25 @@ public class MovieRentalSystem implements CommandLineRunner {
                     System.out.println("""
                             Available commands:
                                 1. Add video
-                                2. All videos
-                                3. All customers
-                                4. All active rentals
-                                5. Customer active rentals
-                                6. Customer history
-                                7. Exit
+                                2. Remove video
+                                3. All videos
+                                4. All customers
+                                5. All active rentals
+                                6. Customer active rentals
+                                7. Customer history
+                                8. Exit
                             Enter command:""");
                     String command = scanner.nextLine().trim();
 
                     switch (command) {
                         case "1" -> addVideo();
-//                        case "2" -> removeVideo();
-                        case "2" -> viewAllVideos();
-                        case "3" -> viewAllCustomers();
-                        case "4" -> viewAllActiveRentals();
-                        case "5" -> viewCustomerActiveRentals();
-                        case "6" -> viewCustomerRentingHistory();
-                        case "7" -> handleExit();
+                        case "2" -> removeVideo();
+                        case "3" -> viewAllVideos();
+                        case "4" -> viewAllCustomers();
+                        case "5" -> viewAllActiveRentals();
+                        case "6" -> viewCustomerActiveRentals();
+                        case "7" -> viewCustomerRentingHistory();
+                        case "8" -> handleExit();
                         default -> System.out.println("\nInvalid command! Please try again.\n");
                     }
                 } else if (loggedInCustomer != null) {
@@ -325,7 +326,7 @@ public class MovieRentalSystem implements CommandLineRunner {
     }
 
     private void viewAllVideos() {
-        List<Video> videos = videoService.viewAllMovies();
+        List<Video> videos = videoService.viewAllVideos();
         StringBuilder sb = new StringBuilder("\n");
 
         for (Video video : videos) {

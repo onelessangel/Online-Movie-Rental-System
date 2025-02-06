@@ -75,10 +75,10 @@ public class VideoServiceTest {
     }
 
     @Test
-    void testViewAllMovies() {
+    void testViewAllVideos() {
         when(videoRepository.findAll()).thenReturn(List.of(testMovie, testTVShowSeason));
 
-        List<Video> videos = videoService.viewAllMovies();
+        List<Video> videos = videoService.viewAllVideos();
 
         assertEquals(2, videos.size());
         verify(videoRepository, times(1)).findAll();

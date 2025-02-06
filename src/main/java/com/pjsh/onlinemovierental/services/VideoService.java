@@ -47,7 +47,7 @@ public class VideoService {
         return true;
     }
 
-    public List<Video> viewAllMovies() {
+    public List<Video> viewAllVideos() {
         return videoRepository.findAll().stream().sorted(Comparator.comparing(Video::getTitle)).toList();
     }
 
